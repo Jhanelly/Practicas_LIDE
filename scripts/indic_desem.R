@@ -110,11 +110,6 @@ enemdu_persona_2024_02  <- enemdu_persona_2024_02  %>%
          ht = p51a + p51b)
 
 
-
-# Para etiquetar valores y variables, considerar usar haven o simplemente asignar los nombres directamente
-# Si tienes el paquete haven, podrías usar algo como:
-# labels(enemdu_persona_2024_02 $etnia) <- set_labels(c(Indigena = 1, Afroecuatoriano = 2, Mestizo/a = 3, Blanco = 4, Montuvio = 5, Otro = 6))
-
 # Horas Efectivas
 enemdu_persona_2024_02 $p24 <- ifelse(enemdu_persona_2024_02 $p24 == 999, NA, enemdu_persona_2024_02 $p24)
 
