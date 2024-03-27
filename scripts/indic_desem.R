@@ -1,4 +1,4 @@
-library(readxl)
+library(readxl) 
 enemdu_persona_2024_02 <- read_excel("bases/enemdu_persona_2024_02.sav")
 
 # Crea indicadores

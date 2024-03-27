@@ -1,0 +1,20 @@
+*****************************************************************************************
+* COMPILACION O EJECUCIÓN DE LAS SINTAXIS PARA GENERACIÓN DE INDICADORES DE EMPLEO
+*****************************************************************************************
+
+Con el fin de facilitar el manejo de las bases de datos, el INEC pone a disposición los siguientes script o sintaxis para la generación de la información sobre Mercado Laboral, mismos que se deben ejecutar en el siguiente orden:
+00 Indicadores de Mercado Laboral.sps
+01 Variables para tabulados.sps
+02 Tabulados de publicación.sps
+
+Mediante estos programas se puede generar las variables de mercado laboral y otras necesarias para su análisis.
+
+
+*****************************************************************************************
+* ACLARACIÓN
+*****************************************************************************************
+
+Estimado usuario tome en cuenta que:
+
+-La variable "estrato" es equivalente a "plan_muestreo".
+-La variable "upm" es equivalente a "id_sector".
