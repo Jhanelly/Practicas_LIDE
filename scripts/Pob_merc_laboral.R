@@ -315,11 +315,11 @@ design <- df %>% as_survey_design(ids = upm,
 options(survey.lonely.psu = "certainty")
 
 
-
+#Tasa de desempleo
 svytable(~pean,design)
+svytable(~desem,design)
+(353704.6 /8345441)*100
 
-
-svymean(~tdesem,design,na.rm = TRUE)
 
 
 
