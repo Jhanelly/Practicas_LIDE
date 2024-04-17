@@ -169,6 +169,7 @@ df <- df %>%
     ht = rowSums(select(., p51a, p51b), na.rm = TRUE)
   )
 
+
 #ETNIA
 df <- df %>%
   mutate(
@@ -307,19 +308,50 @@ df <- df %>%
 
 
 ########################################################################
+library(srvyr)
 
-design <- df %>% as_survey_design(ids = upm,
-                              strata = estrato,
-                              weights = fexp,
-                              nest = T)
+
+design <- df  %>% as_survey_design(ids = upm,
+                                         strata = estrato,
+                                         weights = fexp,
+                                         nest = T)
 options(survey.lonely.psu = "certainty")
 
+library(survey)
 
 #Tasa de desempleo
-svytable(~pean,design)
+
+svymean(~ingrl, design, na.rm = TRUE)
+svyby(~ingpc,~p02, design, svymean, na.rm = TRUE)
 svytable(~desem,design)
 (353704.6 /8345441)*100
 
 
+#Para calcular la tasa de desempleo
+
+
+enemdu <- mutate(df, desem_rc = ifelse(is.na(desem) & pean==1,0,desem))
+
+d1 <- enemdu %>% as_survey_design(ids = upm,
+                                  strata = estrato,
+                                  weights = fexp,
+                                  nest = T)
+options(survey.lonely.psu = "certainty")
+
+
+
+d1 %>% group_by(area) %>% summarise(Desempleo =survey_ratio(desem_rc, pean, vartype=c("se","ci","cv"), na.rm = T, deff = T))
+
+
+
+#Poblacion empleada
+enemdu <- mutate(df, empleo_rc = ifelse(is.na(empleo) & pean==1,0,empleo)) 
+
+d1 <- enemdu %>% as_survey_design(ids = upm,
+                                  strata = estrato,
+                                  weights = fexp,
+                                  nest = T)
+options(survey.lonely.psu = "certainty")
+d1 %>% group_by(area) %>% summarise(empleo =survey_ratio(empleo_rc, pean, vartype=c("se","ci","cv"), na.rm = T, deff = T))
 
 
