@@ -42,6 +42,7 @@ df <- enemdu_persona_2024_02 %>%
 
 
 #Clasificación del sector en el que trabajan
+
 df <- df %>%
   mutate(
     # Asigna nuevas variables basadas en condiciones
@@ -121,7 +122,7 @@ df <- df %>%
     claempl = case_when(
       p42 == 1 ~ 1,          #Empleado/Obrero de Gobierno\ Estado
       p42 >= 2 & p42 <= 10 ~ 2, #Empleado privado
-      TRUE ~ NA       # Para cualquier otro caso, asignar NA (puedes ajustar esto según sea necesario)
+      TRUE ~ NA       
     )
   ) %>% 
   mutate(claempl=factor(claempl, levels=c(1,2),labels=c("Empleado público", "Empleado privado")))
@@ -135,7 +136,7 @@ df <- df %>%
       p42 >= 1 & p42 <= 4 ~ 1, # asalariado
       p42 == 10 ~ 1,          # empleada domestico asalariado
       p42 >= 5 & p42 <= 6 ~ 2, # independiente
-      TRUE ~ NA         # Para cualquier otro caso, asignar NA (ajustable según necesidad)
+      TRUE ~ NA         
     )
   ) %>% 
   mutate(asalind=factor(asalind, levels=c(1,2),labels=c("Asalariado", "Independiente")))
@@ -148,14 +149,13 @@ df <- df %>%
       p10a == 1 ~ 1, #Ninguno
       p10a == 2 ~ 2, #Centro de Alfabetización
       (p10a == 3 | p10a == 4 | p10a == 5 | (p10a == 6 & p10b < 4)) ~ 3, #Educación Básica
-      (p10a == 7 | p10a == 8 | (p10a == 6 & p10b > 3)) ~ 4, #Educación Media/Bachillerato
-      p10a >= 8 & p10a <= 10 ~ 5, #Bachilleradto
-      TRUE ~ NA  # Para cualquier otro caso no especificado, opcional
+      (p10a == 7 | (p10a == 6 & p10b > 3)) ~ 4, #Educación Media/Bachillerato
+      p10a >= 8 & p10a <= 10 ~ 5, #Superior
     )
   ) %>% 
   mutate(nnivins=factor(nnivins, levels=c(1,2,3,4,5),labels=c("Ninguno","Centro de Alfabetización",
                                                               "Educación Básica","Educación Media/Bachillerato",
-                                                              "Bachilleradto")))
+                                                              "Superior")))
 
 
 #Horas de trabajo total
@@ -252,7 +252,7 @@ df <- df %>%
     tinformal = case_when(
       empleo == 1 ~ 0,      # Si empleo es 1, entonces tinformal será 0
       informal == 1 ~ 100, # Si informal es 1, entonces tinformal será 100
-      TRUE ~ NA   # Asignar NA para cualquier otro caso no especificado
+      TRUE ~ NA  
     )
   )
 
@@ -275,7 +275,7 @@ df <- df %>%
       informal == 1 ~ 2,
       empdom == 1 ~ 3,
       nocla == 1 ~ 4,
-      TRUE ~ NA  # Asignar NA para cualquier otro caso no especificado
+      TRUE ~ NA 
     ),
     # Convertir secto a un factor con etiquetas para cada categoría de empleo
     secto = factor(secto, levels = c(1, 2, 3, 4),
@@ -319,12 +319,8 @@ options(survey.lonely.psu = "certainty")
 
 library(survey)
 
-#Tasa de desempleo
 
-svymean(~ingrl, design, na.rm = TRUE)
-svyby(~ingpc,~p02, design, svymean, na.rm = TRUE)
-svytable(~desem,design)
-(353704.6 /8345441)*100
+
 
 
 #Para calcular la tasa de desempleo
@@ -359,7 +355,8 @@ d1 %>% group_by(area) %>% summarise(empleo =survey_ratio(empleo_rc, pean, vartyp
 #ingresos
 
 datos <- df %>%
-  mutate(ingrl = ifelse(ingrl == -1 | ingrl >= 999999, NA, ingrl))
+  mutate(ingrl = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
+  mutate(ingrl_rc=ingrl*(111.72/111.86))
 
 d1 <- datos %>% as_survey_design(ids = upm,
                                   strata = estrato,
@@ -367,5 +364,26 @@ d1 <- datos %>% as_survey_design(ids = upm,
                                   nest = T)
 options(survey.lonely.psu = "certainty")
 
-svyby(~ingpc, ~p02, design, subset = (empleo == 1 & pean==1), svymean,na.rm = T)
+svyby(~ingrl_rc, ~p02, d1, subset = (empleo == 1 & pean==1), svymean,na.rm = T)
 
+
+
+svymean(~ingrl, d1, na.rm = TRUE)
+
+
+
+
+
+
+###Años de escolaridad
+
+prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
+                                  nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b,
+                                  nnivins=="Superior"& p10a==10~17+p10b,
+                                  TRUE~p10b)) %>% 
+  mutate(ingrl = ifelse(ingrl <=-1 | ingrl >= 999999, NA, ingrl)) %>% 
+  mutate(ingrl_rc=ingrl*(111.72/111.86))
+
+
+prueba %>% group_by(p10a) %>% summarise(promedio=mean(ingrl_rc,na.rm=TRUE))
+prueba %>% group_by(nnivins) %>% summarise(promedio=mean(ingrl_rc,na.rm=TRUE))
