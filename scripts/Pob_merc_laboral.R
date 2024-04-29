@@ -356,7 +356,7 @@ d1 %>% group_by(area) %>% summarise(empleo =survey_ratio(empleo_rc, pean, vartyp
 
 datos <- df %>%
   mutate(ingrl = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
-  mutate(ingrl_rc=ingrl*(111.72/111.86))
+  mutate(ingrl_rc=ingrl*(111.715101416755/111.855131486751)) %>% filter(empleo == 1 & pean==1)
 
 d1 <- datos %>% as_survey_design(ids = upm,
                                   strata = estrato,
@@ -364,26 +364,58 @@ d1 <- datos %>% as_survey_design(ids = upm,
                                   nest = T)
 options(survey.lonely.psu = "certainty")
 
-svyby(~ingrl_rc, ~p02, d1, subset = (empleo == 1 & pean==1), svymean,na.rm = T)
+svyby(~ingrl_rc, ~p02, d1, svymean,na.rm = T)
 
 
 
-svymean(~ingrl, d1, na.rm = TRUE)
+svymean(~ingrl_rc, d1, na.rm = TRUE)
 
 
 
 
 
 
-###Años de escolaridad
+###Años de escolaridad 
 
 prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
                                   nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b,
                                   nnivins=="Superior"& p10a==10~17+p10b,
                                   TRUE~p10b)) %>% 
   mutate(ingrl = ifelse(ingrl <=-1 | ingrl >= 999999, NA, ingrl)) %>% 
-  mutate(ingrl_rc=ingrl*(111.72/111.86))
+  mutate(ingrl_rc=ingrl*(111.72/111.86)) 
+
+d1 <- prueba %>% as_survey_design(ids = upm,
+                                  strata = estrato,
+                                  weights = fexp,
+                                  nest = T)
+options(survey.lonely.psu = "certainty")
+
+svyby(~ingrl_rc, ~p10a, d1, svymean,na.rm = T)
+svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
+svyby(~ingrl_rc, ~nnivins +area, d1, svymean,na.rm = T)
 
 
-prueba %>% group_by(p10a) %>% summarise(promedio=mean(ingrl_rc,na.rm=TRUE))
-prueba %>% group_by(nnivins) %>% summarise(promedio=mean(ingrl_rc,na.rm=TRUE))
+
+
+#año de escolaridad en el sector informal
+prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
+                                            nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b,
+                                            nnivins=="Superior"& p10a==10~17+p10b,
+                                            TRUE~p10b)) %>% 
+  mutate(ingrl = ifelse(ingrl <=-1 | ingrl >= 999999, NA, ingrl)) %>% 
+  mutate(ingrl_rc=ingrl*(111.72/111.86)) %>% 
+  filter(secto=='Población con empleo en el sector informal')
+
+
+d1 <- prueba %>% as_survey_design(ids = upm,
+                                  strata = estrato,
+                                  weights = fexp,
+                                  nest = T)
+options(survey.lonely.psu = "certainty")
+
+svyby(~ingrl_rc, ~p10a, d1, svymean,na.rm = T)
+svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
+
+
+
+
