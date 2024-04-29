@@ -355,3 +355,17 @@ options(survey.lonely.psu = "certainty")
 d1 %>% group_by(area) %>% summarise(empleo =survey_ratio(empleo_rc, pean, vartype=c("se","ci","cv"), na.rm = T, deff = T))
 
 
+
+#ingresos
+
+datos <- df %>%
+  mutate(ingrl = ifelse(ingrl == -1 | ingrl >= 999999, NA, ingrl))
+
+d1 <- datos %>% as_survey_design(ids = upm,
+                                  strata = estrato,
+                                  weights = fexp,
+                                  nest = T)
+options(survey.lonely.psu = "certainty")
+
+svyby(~ingpc, ~p02, design, subset = (empleo == 1 & pean==1), svymean,na.rm = T)
+
