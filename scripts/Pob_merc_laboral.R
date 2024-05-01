@@ -11,7 +11,7 @@ df <- enemdu_persona_2024_02 %>%
     # Inicializar t_a a 1
     t_a = 1,                          #población total
     # Crear indicador basado en p03
-    condact = if_else(p03 < 15, 0, condact), #Fuera ed la edad de trabajar
+    menor15 = if_else(p03 < 15, 0, condact), #Fuera de la edad de trabajar
     petn = if_else(p03 >= 15 & p03 <= 99, 1, 0), #Población en edad de trabajar
     # Recodificaciones de condact        
     pean = if_else(condact >= 1 & condact <= 8, 1, 0), #Económicamente activa
