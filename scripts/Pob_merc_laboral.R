@@ -326,7 +326,7 @@ library(survey)
 #Para calcular la tasa de desempleo
 
 
-enemdu <- mutate(df, desem_rc = ifelse(is.na(desem) & pean==1,0,desem))
+enemdu <- mutate(df, desem_rc = ifelse(desem==0 & pean==1,0,desem))
 
 d1 <- enemdu %>% as_survey_design(ids = upm,
                                   strata = estrato,
@@ -341,7 +341,7 @@ d1 %>% group_by(area) %>% summarise(Desempleo =survey_ratio(desem_rc, pean, vart
 
 
 #Poblacion empleada
-enemdu <- mutate(df, empleo_rc = ifelse(is.na(empleo) & pean==1,0,empleo)) 
+enemdu <- mutate(df, empleo_rc = ifelse(empleo==0 & pean==1,0,empleo)) 
 
 d1 <- enemdu %>% as_survey_design(ids = upm,
                                   strata = estrato,
@@ -356,7 +356,7 @@ d1 %>% group_by(area) %>% summarise(empleo =survey_ratio(empleo_rc, pean, vartyp
 
 datos <- df %>%
   mutate(ingrl = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
-  mutate(ingrl_rc=ingrl*(111.715101416755/111.855131486751)) %>% filter(empleo == 1 & pean==1)
+  mutate(ingrl_rc=ingrl*(111.715101/111.8551314)) %>% filter(empleo == 1 & pean==1) #deflactor del ipc 
 
 d1 <- datos %>% as_survey_design(ids = upm,
                                   strata = estrato,
@@ -378,8 +378,8 @@ svymean(~ingrl_rc, d1, na.rm = TRUE)
 ###Años de escolaridad 
 
 prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
-                                  nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b,
-                                  nnivins=="Superior"& p10a==10~17+p10b,
+                                  nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b, #Superior Universitario o no Universitario
+                                  nnivins=="Superior"& p10a==10~17+p10b, #Posgrado
                                   TRUE~p10b)) %>% 
   mutate(ingrl = ifelse(ingrl <=-1 | ingrl >= 999999, NA, ingrl)) %>% 
   mutate(ingrl_rc=ingrl*(111.72/111.86)) 
@@ -417,5 +417,9 @@ svyby(~ingrl_rc, ~p10a, d1, svymean,na.rm = T)
 svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
 
 
+
+#investigar los años de ocupación en el trabajo actualmente y los años de experiencia laboral
+
+#graficos con intervalo de confianza del 95%
 
 
