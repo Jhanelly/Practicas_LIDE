@@ -317,8 +317,28 @@ svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
 
 
 
+
+
+
+
+
+
+
+
+
+
 #realizar el calculo para los años de experiencia del INEC y la calculada con la formúla del paper (comparación)
 
+#Experiencia laboral calculada
+prueba3 <- prueba %>% mutate(exp_cal=p03-años_esco-6) %>% filter(empleo==1)
+d3 <- prueba3 %>% as_survey_design(ids = upm,
+                                   strata = estrato,
+                                   weights = fexp,
+                                   nest = T)
+options(survey.lonely.psu = "certainty")
+
+svyhist(~p45, design = d3)
+svyhist(~exp_cal, design = d3)
 #graficos con intervalo de confianza del 95%.
 
 
