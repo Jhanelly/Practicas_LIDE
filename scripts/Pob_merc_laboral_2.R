@@ -114,21 +114,6 @@ df <- df %>%
   mutate(asalind=factor(asalind, levels=c(1,2),labels=c("Asalariado", "Independiente")))
 
 
-#Nivel de instrucción
-df <- df %>%
-  mutate(
-    nnivins = case_when(
-      p10a == 1 ~ 1, #Ninguno
-      p10a == 2 ~ 2, #Centro de Alfabetización
-      (p10a == 3 | p10a == 4 | p10a == 5 | (p10a == 6 & p10b < 4)) ~ 3, #Educación Básica
-      (p10a == 7 | (p10a == 6 & p10b > 3)) ~ 4, #Educación Media/Bachillerato
-      p10a >= 8 & p10a <= 10 ~ 5, #Superior
-    )
-  ) %>% 
-  mutate(nnivins=factor(nnivins, levels=c(1,2,3,4,5),labels=c("Ninguno","Centro de Alfabetización",
-                                                              "Educación Básica","Educación Media/Bachillerato",
-                                                              "Superior")))
-
 
 #Horas de trabajo total
 df <- df %>%
