@@ -319,6 +319,6 @@ svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
 
 #realizar el calculo para los años de experiencia del INEC y la calculada con la formúla del paper (comparación)
 
-#graficos con intervalo de confianza del 95%
+#graficos con intervalo de confianza del 95%.
 
 
