@@ -256,11 +256,15 @@ design %>% group_by(area) %>% summarise(empleo =survey_ratio(templeog, pean, var
 
 
 
+
 #ingresos medios nacionales 
-svymean(~ingrl_rc, design, na.rm = TRUE)
+#Se realiza el análisis para el total de empleados (asalariados e independientes)
+#Por tal motivo es necesario filtrar
+ingresos <- design %>%  filter(empleo == 1) 
+svymean(~ingrl_rc, ingresos, na.rm = TRUE) 
 
 #ingresos medios por sexo
-svyby(~ingrl_rc, ~p02, design, svymean,na.rm = T)
+svyby(~ingrl_rc, ~p02, ingresos, svymean,na.rm = T)
 
 
 
