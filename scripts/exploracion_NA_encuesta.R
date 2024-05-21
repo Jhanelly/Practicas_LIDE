@@ -225,7 +225,8 @@ model <- svyglm(ingrl_imp_log ~ p45, design = d3)
 svyplot(ingrl_imp_log ~ p45, d3, style="subsample",pch=1, main = "Diagrama de Dispersión con Diseño Muestral")
 abline(model, col = "red", lwd = 2)
 
-#cuando no aplico el filtro hay una relación negativa
+#cuando no aplico el filtro hay una relación positiva
+
 
 
 
