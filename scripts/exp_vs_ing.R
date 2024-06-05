@@ -63,6 +63,7 @@ df2 <- enemdu_persona_2024_02 %>%
   
   #Años de experiencia calculada, el 3 puede ser remplazado en valores de 3 a 6, pues es la edad en la que inician
   #los estudios en Ecuador.
+
   mutate(exp_cal3=p03-años_esco-3,
          exp_cal4=p03-años_esco-4,
          exp_cal5=p03-años_esco-5,
@@ -72,6 +73,7 @@ df2 <- enemdu_persona_2024_02 %>%
          exp_cal4=ifelse(exp_cal4<0,0,exp_cal4),
          exp_cal5=ifelse(exp_cal5<0,0,exp_cal5),
          exp_cal6=ifelse(exp_cal6<0,0,exp_cal6)) %>% 
+
   
   #Valos no validos
   mutate(ingrl_trans = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
@@ -105,6 +107,7 @@ df2 <- df2 %>%
 
 
 #Diseño muestral complejo
+
 
 d2 <- df2 %>% as_survey_design(ids = upm,
                                strata = estrato,
@@ -150,7 +153,7 @@ svymean(~tinformal, pob_empl, na.rm = TRUE)
 #Modelo con p45
 model <- svyglm(log_ingrl_rc ~ p45 + I(p45^2), design = pob_empl)
 model
-
+summary(model)
 
 
 
@@ -158,22 +161,21 @@ pob_empl2 <- pob_empl  %>%
                 filter(!is.na(ingrl_rc)) %>% 
                 mutate(p45_cut=cut(p45,
                   breaks=seq(0,86,length.out=10),
-                  dig.lab=5,right = FALSE)) %>% 
-                mutate(p45_cut=factor(p45_cut, levels = rev(levels(p45_cut))))
+                  dig.lab=5,right = FALSE)) 
 
 resultados <- pob_empl2 %>% group_by(p45_cut) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
 
 
 
 ggplot(resultados, aes(x = p45_cut, y = ingreso, fill = p45_cut)) +
-  geom_bar(stat = "identity") +
-  coord_flip()+
+  geom_bar(stat = "identity")+
   geom_errorbar(aes(ymin = ingreso_low , ymax = ingreso_upp ), width = 0.2)+
   labs(title = "Ingreso por Grupo de experiencia laboral",
        x = "Grupo de experiencia laboral",
        y = "Mediana del ingreso laboral") +
   theme_minimal() +
-  theme(legend.position = "none",  plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none",  plot.title = element_text(hjust=0.5),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 
@@ -181,7 +183,7 @@ ggplot(resultados, aes(x = p45_cut, y = ingreso, fill = p45_cut)) +
 
 model2 <- svyglm(log_ingrl_rc ~ exp_cal+I(exp_cal^2), design = pob_empl)
 model2
-
+summary(model2)
 
 pob_empl2 <- pob_empl  %>% 
   filter(!is.na(ingrl_rc)) %>% 
@@ -191,7 +193,7 @@ pob_empl2 <- pob_empl  %>%
   mutate(exp_cal_cut=factor(exp_cal_cut, levels = rev(levels(exp_cal_cut))))
 
 resultados2 <- pob_empl2 %>% group_by(exp_cal_cut) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
-resultados2
+
 
 
 ggplot(resultados2, aes(x = exp_cal_cut, y = ingreso, fill = exp_cal_cut)) +
@@ -203,4 +205,14 @@ ggplot(resultados2, aes(x = exp_cal_cut, y = ingreso, fill = exp_cal_cut)) +
        y = "Mediana del ingreso laboral") +
   theme_minimal() +
   theme(legend.position = "none",  plot.title = element_text(hjust=0.5))
+
+
+
+# Probar con 3 4 5 y ver los errores
+# rangos de 5 hasta el 30 y luego de 30 en adelante
+# retorno de la experiencia en porcentaje
+# conocer la edad exacta en la que empieza a decrecer
+# podria ser por actividad laboral o por nivel de educacion
+# fuente del por que empieza a decrecer
+##
 
