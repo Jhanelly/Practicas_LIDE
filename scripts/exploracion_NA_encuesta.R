@@ -142,7 +142,7 @@ svyby(~ingrl_rc, ~p02, pob_empl, svymean,na.rm = T)
 
 
 #tasa de empleo sector informal
-svymean(~tinformal, d2, na.rm = TRUE) 
+svymean(~tinformal, pob_empl, na.rm = TRUE) 
 
 ##### AQUÍ FINALIZA LA PRIMERA PARTE DEL SCRIPT
 
@@ -217,20 +217,11 @@ d3 <- exploracion2 %>% as_survey_design(ids = upm,
 options(survey.lonely.psu = "certainty")
 status(exploracion2) %>% flextable()
 
-
-d3 <- d3 %>% filter(p45<20)
-
-model <- svyglm(ingrl_imp_log ~ p45, design = d3)
+model <- svyglm(ingrl_imp_log ~ p45+I(p45^2), design = d3)
 
 svyplot(ingrl_imp_log ~ p45, d3, style="subsample",pch=1, main = "Diagrama de Dispersión con Diseño Muestral")
 abline(model, col = "red", lwd = 2)
 
+
 #cuando no aplico el filtro hay una relación positiva
-
-
-
-
-
-
-
 
