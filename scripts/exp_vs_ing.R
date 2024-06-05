@@ -12,6 +12,7 @@ library(haven)
 library(dplyr)
 library(survey)
 library(srvyr)
+library(ggplot2)
 
 
 #Importando la base de datos
@@ -60,10 +61,22 @@ df2 <- enemdu_persona_2024_02 %>%
                              nnivins2=="Superior"& p10a==10~17+p10b, #Posgrado
                              TRUE~p10b)) %>%  
   
-  #Años de experiencia calculada, el 3 puede ser remplazado en valores de 3 a 5, pues es la edad en la que inician
+  #Años de experiencia calculada, el 3 puede ser remplazado en valores de 3 a 6, pues es la edad en la que inician
   #los estudios en Ecuador.
+<<<<<<< HEAD
   mutate(exp_cal=p03-años_esco-4) %>% 
   mutate(exp_cal=ifelse(exp_cal<0,0,exp_cal)) %>% 
+=======
+  mutate(exp_cal3=p03-años_esco-3,
+         exp_cal4=p03-años_esco-4,
+         exp_cal5=p03-años_esco-5,
+         exp_cal6=p03-años_esco-6) %>% #6 por las investigaciones, pero en Ecuador es de 3 a 5
+  #Seguramente, de 4 a 6 vuelva la experiencia negativa, así que esos valores se volveran 0
+  mutate(exp_cal3=ifelse(exp_cal3<0,0,exp_cal3),
+         exp_cal4=ifelse(exp_cal4<0,0,exp_cal4),
+         exp_cal5=ifelse(exp_cal5<0,0,exp_cal5),
+         exp_cal6=ifelse(exp_cal6<0,0,exp_cal6)) %>% 
+>>>>>>> 8f1934e73b565d98c105aae0c9e70b5bef69ff61
   
   #Valos no validos
   mutate(ingrl_trans = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
@@ -141,9 +154,11 @@ svymean(~tinformal, pob_empl, na.rm = TRUE)
 
 
 #Modelo con p45
-model <- svyglm(log_ingrl_rc ~ p45+I(p45^2), design = pob_empl)
+model <- svyglm(log_ingrl_rc ~ p45 + I(p45^2), design = pob_empl)
 model
 summary(model)
+
+
 
 pob_empl2 <- pob_empl  %>% 
                 filter(!is.na(ingrl_rc)) %>% 
@@ -175,7 +190,7 @@ summary(model2)
 
 pob_empl2 <- pob_empl  %>% 
   filter(!is.na(ingrl_rc)) %>% 
-  mutate(exp_cal_cut=cut(exp_cal,
+  mutate(exp_cal_cut=cut(exp_cal3,
                      breaks=seq(0,92,length.out=10),
                      dig.lab=5,right = FALSE)) %>% 
   mutate(exp_cal_cut=factor(exp_cal_cut, levels = rev(levels(exp_cal_cut))))
@@ -194,6 +209,7 @@ ggplot(resultados2, aes(x = exp_cal_cut, y = ingreso, fill = exp_cal_cut)) +
   theme_minimal() +
   theme(legend.position = "none",  plot.title = element_text(hjust=0.5))
 
+<<<<<<< HEAD
 
 # Probar con 3 4 5 y ver los errores
 # rangos de 5 hasta el 30 y luego de 30 en adelante
@@ -204,3 +220,5 @@ ggplot(resultados2, aes(x = exp_cal_cut, y = ingreso, fill = exp_cal_cut)) +
 ##
 
 
+=======
+>>>>>>> 8f1934e73b565d98c105aae0c9e70b5bef69ff61

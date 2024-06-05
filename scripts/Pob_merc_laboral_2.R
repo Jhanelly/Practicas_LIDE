@@ -31,8 +31,8 @@ df <- enemdu_persona_2024_02 %>%
     pein = if_else(condact == 9, 1, 0)) %>%  #Población inactiva
   mutate(area=factor(area, levels=c(1,2),labels=c("Urbano","Rural")),
          p02=factor(p02, levels=c(1,2),labels=c("Hombre","Mujer"))) %>% 
-  mutate(ingrl = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>%  #Valos no validos
-  mutate(ingrl_rc=ingrl*(111.715101/111.8551314)) #deflactor del ipc año base diciembre 2023
+  mutate(ingrl_trans = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>%  #Valos no validos
+  mutate(ingrl_rc=ingrl_trans*(111.715101/111.8551314))  #deflactor del ipc año base diciembre 2023
 
 
 #Clasificación del sector en el que trabajan
@@ -273,12 +273,13 @@ svyby(~ingrl_rc, ~p02, ingresos, svymean,na.rm = T)
 
 ###Años de escolaridad - Se creo esta variable tomando en cuenta el nivel de instrucción y el último año aprobado
 
-prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
-                                            nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b, #Superior Universitario o no Universitario
+df <- df %>% mutate(años_esco=case_when(nnivins=="Ninguno"~ 0,
+                                            nnivins=="Educación Media/Bachillerato"~10+p10b,
+                                            nnivins=="Superior"&(p10a==8|p10a==9)~13+p10b, #Superior Universitario o no Universitario
                                             nnivins=="Superior"& p10a==10~17+p10b, #Posgrado
                                             TRUE~p10b)) 
 
-d1 <- prueba %>% as_survey_design(ids = upm,
+d1 <- df %>% as_survey_design(ids = upm,
                                   strata = estrato,
                                   weights = fexp,
                                   nest = T)
@@ -330,15 +331,43 @@ svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
 #realizar el calculo para los años de experiencia del INEC y la calculada con la formúla del paper (comparación)
 
 #Experiencia laboral calculada
-prueba3 <- prueba %>% mutate(exp_cal=p03-años_esco-6) %>% filter(empleo==1)
-d3 <- prueba3 %>% as_survey_design(ids = upm,
+pob_empl <- df %>% mutate(exp_cal=p03-años_esco-3) %>% filter(empleo==1)
+d3 <- pob_empl %>% as_survey_design(ids = upm,
                                    strata = estrato,
                                    weights = fexp,
                                    nest = T)
+
 options(survey.lonely.psu = "certainty")
 
-svyhist(~p45, design = d3)
-svyhist(~exp_cal, design = d3)
-#graficos con intervalo de confianza del 95%.
+#svyhist(~p45, design = d3)
+#svyhist(~exp_cal, design = d3)
+
+
+#prueba3 %>% select(p03,nnivins,años_esco,exp_cal,p45,ingrl,ingrl_trans,ingrl_rc) %>% View()
+
+
+
+
+
+
+#agrupar por las personas que no han trabajado (negativos y ceros)
+#un grafico de dispersion con logaritmo natural
+
+grafico <- d3 %>% filter(ingrl_rc > 0 & (exp_cal>0 & exp_cal <20)) %>% 
+  mutate(log_ingrl_rc =log(ingrl_rc))
+  
+
+svyplot(log_ingrl_rc ~ exp_cal, grafico, style="subsample",pch=1, main = "Diagrama de Dispersión con Diseño Muestral")
+
+svycor(~ log_ingrl_rc + exp_cal, design = grafico, method = "pearson")
+#Porcentaje de subestimación
+pob_empl <- pob_empl %>% mutate(sub_estim=exp_cal > p45) 
+d4 <- pob_empl %>% as_survey_design(ids = upm,
+                                    strata = estrato,
+                                    weights = fexp,
+                                    nest = T)
+
+options(survey.lonely.psu = "certainty")
+svymean(~sub_estim, d4, na.rm = TRUE) 
 
 

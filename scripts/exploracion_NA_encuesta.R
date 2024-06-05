@@ -142,7 +142,7 @@ svyby(~ingrl_rc, ~p02, pob_empl, svymean,na.rm = T)
 
 
 #tasa de empleo sector informal
-svymean(~tinformal, d2, na.rm = TRUE) 
+svymean(~tinformal, pob_empl, na.rm = TRUE) 
 
 ##### AQUÍ FINALIZA LA PRIMERA PARTE DEL SCRIPT
 
@@ -217,20 +217,34 @@ d3 <- exploracion2 %>% as_survey_design(ids = upm,
 options(survey.lonely.psu = "certainty")
 status(exploracion2) %>% flextable()
 
-
-d3 <- d3 %>% filter(p45<20)
-
-model <- svyglm(ingrl_imp_log ~ p45, design = d3)
+model <- svyglm(ingrl_imp_log ~ p45+I(p45^2), design = d3)
 
 svyplot(ingrl_imp_log ~ p45, d3, style="subsample",pch=1, main = "Diagrama de Dispersión con Diseño Muestral")
 abline(model, col = "red", lwd = 2)
 
-#cuando no aplico el filtro hay una relación positiva
 
 
 
+##########################################################################
 
+pob_empl2 <- df2 %>% select(upm,estrato,fexp, p45, ingrl_rc, log_ingrl_rc) %>% 
+  filter(!is.na(ingrl_rc)) %>% 
+  mutate(
+    p45_cut = if_else(p45 < 5, "[0,5)",
+                      if_else(p45 >= 5 & p45 < 10, "[5,10)",
+                              if_else(p45 >= 10 & p45 < 15, "[10,15)",
+                                      if_else(p45 >= 15 & p45 < 20, "[15,20)", ">=20")))),
+    p45_cut = factor(p45_cut,
+                     levels = c("[0,5)", "[5,10)", "[10,15)", "[15,20)", ">=20"),
+                     ordered = TRUE)
+  )
 
+d4 <- pob_empl2 %>% as_survey_design(ids = upm,
+                                        strata = estrato,
+                                        weights = fexp,
+                                        nest = T)
+
+resultados <- d4 %>% group_by(p45_cut) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
 
 
 
