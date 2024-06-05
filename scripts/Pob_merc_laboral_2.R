@@ -274,8 +274,9 @@ svyby(~ingrl_rc, ~p02, ingresos, svymean,na.rm = T)
 ###Años de escolaridad - Se creo esta variable tomando en cuenta el nivel de instrucción y el último año aprobado
 
 prueba <- df %>% mutate(años_esco=case_when(nnivins=="Educación Media/Bachillerato"~10+p10b,
-                                            nnivins=="Superior"& (p10a==8|p10a==9)~13+p10b, #Superior Universitario o no Universitario
-                                            nnivins=="Superior"& p10a==10~17+p10b, #Posgrado
+                                            nnivins=="Superior" & p10a==8~13+p10b, #Superior no Universitario 
+                                            nnivins=="Superior" & p10a==9~13+p10b,#Superior Universitario
+                                            nnivins=="Superior" & p10a==10~17+p10b, #Posgrado
                                             TRUE~p10b)) 
 
 d1 <- prueba %>% as_survey_design(ids = upm,
@@ -330,7 +331,7 @@ svyby(~ingrl_rc, ~nnivins, d1, svymean,na.rm = T)
 #realizar el calculo para los años de experiencia del INEC y la calculada con la formúla del paper (comparación)
 
 #Experiencia laboral calculada
-prueba3 <- prueba %>% mutate(exp_cal=p03-años_esco-6) %>% filter(empleo==1)
+prueba3 <- prueba %>% mutate(exp_cal=p03-años_esco-5) %>% filter(empleo==1)
 d3 <- prueba3 %>% as_survey_design(ids = upm,
                                    strata = estrato,
                                    weights = fexp,
@@ -339,6 +340,10 @@ options(survey.lonely.psu = "certainty")
 
 svyhist(~p45, design = d3)
 svyhist(~exp_cal, design = d3)
+
+
+prueba3 %>% select(p03,años_esco,exp_cal,p45,empleo,nnivins) %>% arrange(desc(exp_cal)) %>% View()
+prueba3 %>% select(p03,años_esco,exp_cal,p45,empleo,nnivins) %>% arrange(exp_cal) %>% View()
 #graficos con intervalo de confianza del 95%.
 
 
