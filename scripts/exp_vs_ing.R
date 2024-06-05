@@ -201,6 +201,6 @@ ggplot(resultados2, aes(x = exp_cal_cut, y = ingreso, fill = exp_cal_cut)) +
 # conocer la edad exacta en la que empieza a decrecer
 # podria ser por actividad laboral o por nivel de educacion
 # fuente del por que empieza a decrecer
-#
+##
 
 
