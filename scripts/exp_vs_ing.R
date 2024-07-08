@@ -16,7 +16,7 @@ library(ggplot2)
 
 
 #Importando la base de datos
-enemdu_persona_2024_02 <- read_sav("bases/enemdu_persona_2024_02.sav")
+enemdu_persona_2024_02 <- read_sav("bases/enemdu_persona_2024_05.sav")
 
 #CONSTRUCCIÓN DE VARIABLES 
 
@@ -80,7 +80,7 @@ df2 <- enemdu_persona_2024_02 %>%
   mutate(ingrl_trans = ifelse(ingrl <= -1 | ingrl >= 999999, NA, ingrl)) %>% 
   
   #deflactor del ipc año base diciembre 2023
-  mutate(ingrl_rc=ingrl_trans*(111.715101/111.8551314)) %>%  
+  mutate(ingrl_rc=ingrl_trans*(111.715101/113.7108946)) %>%  
   mutate(log_ingrl_rc =log(ingrl_rc+0.01))
 
 
@@ -241,12 +241,16 @@ ggplot(resultados, aes(x = p45_cut, y = ingreso, fill = p45_cut)) +
   geom_bar(stat = "identity")+
   coord_flip()+
   geom_errorbar(aes(ymin = ingreso_low , ymax = ingreso_upp ), width = 0.2)+
-  labs(title = "Ingreso por Grupo de experiencia laboral",
+  labs(title = "Mediana de ingreso por Grupo de experiencia laboral",
        x = "Grupo de experiencia laboral",
        y = "Mediana del ingreso laboral") +
   theme_minimal() +
   theme(legend.position = "none",  plot.title = element_text(hjust=0.5),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  scale_fill_viridis_d(option = "plasma")
+
+
+
 
 
 tasa_crecimiento(model,25)
@@ -392,11 +396,125 @@ gra_exp_cal(res_años_6)
 tasa_crecimiento(model6,40)
 graf_exp_retorno(res_años_6)
 
-#TAREAS PENDIENTES ####
-# Ver los errores con la edad,3,4,5,6 ------------listo
-# gráficos con diferentes rangos -----------------listo
-# conocer la edad exacta en la que empieza a decrecer ---pendiente
-# retorno de la experiencia en porcentaje------ listo
-# podria ser por actividad laboral o por nivel de educacion
-# fuente del por que empieza a decrecer
 
+
+
+
+
+
+#SBU
+#porque hay desempleo en los recien graduados y sueldos bajos
+#
+
+
+
+##RAMA DE ACTIVIDAD, tiene más sentido hacerlo con los años que llevan dedicandose a una sola actividad
+
+#de 6 a 9 significativo 11 13 14+- 16 17 19 y 20 +-
+
+model <- svyglm(log_ingrl_rc ~ p45 + I(p45^2), design = (pob_empl %>% filter(rama1==1)))
+model
+summary(model)
+
+
+inflexion(model)
+
+
+#Se ajusta los intervalos, para poder observar un poco mejor el punto de inflexión en el gráfico
+pob_empl2 <- pob_empl %>% 
+  filter(!is.na(ingrl_rc)) %>% 
+  mutate(
+    p45_cut = case_when(p45 < 3 ~ "[0,3)",
+                        p45 >= 3 & p45 < 6 ~ "[3,6)",
+                        p45 >= 6 & p45 < 9 ~ "[6,9)",
+                        p45 >= 9 & p45 < 12 ~ "[9,12)",
+                        p45 >= 12 & p45 < 15 ~ "[12,15)",
+                        p45 >= 15 & p45 < 18 ~ "[15,18)",
+                        p45 >= 18~ ">=18")) %>% 
+  mutate(p45_cut = factor(p45_cut,
+                          levels = rev(c("[0,3)", "[3,6)", "[6,9)", 
+                                         "[9,12)", "[12,15)","[15,18)",">=18")),
+                          ordered = TRUE))
+
+
+resultados <- pob_empl2 %>% filter(rama1==14) %>% group_by(p45_cut) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
+
+
+
+ggplot(resultados, aes(x = p45_cut, y = ingreso, fill = p45_cut)) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  geom_errorbar(aes(ymin = ingreso_low , ymax = ingreso_upp ), width = 0.2)+
+  labs(title = "Ingreso por Grupo de experiencia laboral",
+       x = "Grupo de experiencia laboral",
+       y = "Mediana del ingreso laboral") +
+  theme_minimal() +
+  theme(legend.position = "none",  plot.title = element_text(hjust=0.5),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+
+
+#GRUPO DE OCUPACIÓN SIGNIFICATIVO 2, 3, 4,5, 7+-,8
+#DECRECE EN 6
+#EN 10 TIENE SIGNOS CONTRARIOS
+model <- svyglm(log_ingrl_rc ~ p45 + I(p45^2), design = (pob_empl %>% filter(grupo1==2)))
+model
+summary(model)
+
+
+inflexion(model)
+
+
+pob_empl2 <- pob_empl %>% 
+  filter(!is.na(ingrl_rc)) %>% 
+  mutate(
+    p45_cut = case_when(p45 < 3 ~ "[0,3)",
+                        p45 >= 3 & p45 < 6 ~ "[3,6)",
+                        p45 >= 6 & p45 < 9 ~ "[6,9)",
+                        p45 >= 9 & p45 < 12 ~ "[9,12)",
+                        p45 >= 12 & p45 < 15 ~ "[12,15)",
+                        p45 >= 15 & p45 < 18 ~ "[15,18)",
+                        p45 >= 18~ ">=18")) %>% 
+  mutate(p45_cut = factor(p45_cut,
+                          levels = rev(c("[0,3)", "[3,6)", "[6,9)", 
+                                         "[9,12)", "[12,15)","[15,18)",">=18")),
+                          ordered = TRUE))
+
+
+resultados <- pob_empl2 %>% filter(rama1==10) %>% group_by(p45_cut) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
+
+
+
+ggplot(resultados, aes(x = p45_cut, y = ingreso, fill = p45_cut)) +
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  geom_errorbar(aes(ymin = ingreso_low , ymax = ingreso_upp ), width = 0.2)+
+  labs(title = "Ingreso por Grupo de experiencia laboral",
+       x = "Grupo de experiencia laboral",
+       y = "Mediana del ingreso laboral") +
+  theme_minimal() +
+  theme(legend.position = "none",  plot.title = element_text(hjust=0.5),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+resultados <- pob_empl2 %>% group_by(grupo1) %>% summarise(ingreso =survey_median(ingrl_rc, vartype=c("se","ci","cv"), na.rm = T, deff = T))
+
+
+
+
+
+
+
+#AREA
+
+model <- svyglm(log_ingrl_rc ~ p45 + I(p45^2), design = (pob_empl %>% filter(area=="Rural")))
+model
+summary(model)
+
+
+inflexion(model)
